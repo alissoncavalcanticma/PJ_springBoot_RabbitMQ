@@ -35,13 +35,14 @@ public class PropostaSemIntegracao {
     //Annotation @EnableScheduling deve ser acrescentado ao método main
     @Scheduled(fixedDelay = 10, timeUnit = TimeUnit.SECONDS)
     public void buscarPropostasSemIntegracao(){
-        logger.info("Execução de JOB realizada."); //Gerar Log de execução do Job
+        logger.info("Execução de JOB Iniciada."); //Gerar Log de início de execução.
         propostaRepository.findAllByIntegradaIsFalse().forEach(proposta -> {
            try{
                notificacaoRabbitService.notificar(proposta, exchange);
 
                atualizarProposta(proposta);
                logger.info("Proposta pendente integrada na execução de JOB"); //Gerar Log de execução do Job
+               logger.info("Execução de JOB Finalizada."); //Gerar Log de fim de execução.
            }catch(RuntimeException ex){
                 logger.error(ex.getMessage());
            }
