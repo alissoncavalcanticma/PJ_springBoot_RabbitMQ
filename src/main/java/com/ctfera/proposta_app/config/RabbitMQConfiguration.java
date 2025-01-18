@@ -140,7 +140,7 @@ public class RabbitMQConfiguration {
             return new Jackson2JsonMessageConverter();
         }
 
-        //Criando Bean de RabbitTemplate
+        //Criando Bean de RabbitTemplate - Modelo de mensagem Rabbit
         // Definindo ConectionFactory
         // Definindo MessageConverter
         @Bean
