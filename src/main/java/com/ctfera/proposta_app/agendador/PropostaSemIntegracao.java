@@ -35,18 +35,20 @@ public class PropostaSemIntegracao {
     //Annotation @EnableScheduling deve ser acrescentado ao método main
     @Scheduled(fixedDelay = 10, timeUnit = TimeUnit.SECONDS)
     public void buscarPropostasSemIntegracao(){
-        logger.info("Execução de JOB Iniciada."); //Gerar Log de início de execução.
+        logger.info("0 - Verificação de proposta sem integração..."); //Gerar Log de início de execução.
         propostaRepository.findAllByIntegradaIsFalse().forEach(proposta -> {
            try{
+               logger.info("*** - Existe proposta pendente de integração! - ***"); //Gerar Log de execução do Job
                notificacaoRabbitService.notificar(proposta, exchange);
-
+               logger.info("1 - Proposta está sendo integrada..."); //Gerar Log de execução do Job
                atualizarProposta(proposta);
-               logger.info("Proposta pendente integrada na execução de JOB"); //Gerar Log de execução do Job
+               logger.info("2 - Proposta pendente integrada com sucesso!"); //Gerar Log de execução do Job
                logger.info("Execução de JOB Finalizada."); //Gerar Log de fim de execução.
            }catch(RuntimeException ex){
                 logger.error(ex.getMessage());
            }
         });
+        logger.info("*** - Não existem propostas não integradas! - ***");
     }
 
     private void atualizarProposta(Proposta proposta){
