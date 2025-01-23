@@ -50,6 +50,26 @@ public class RabbitMQConfiguration {
             return QueueBuilder.durable("proposta-concluida.ms-notificacao").build();
         }
 
+        //DLQ Configurations
+        // - Criando DLQ -> Dead Letter Queue (Fila de exceções)
+        @Bean
+        public Queue criarFilaPropostaPendenteDLQ(){
+            return QueueBuilder.durable("proposta-pendente.dlq").build();
+        }
+
+        // - Criando Exchange DLQ
+        @Bean
+        public FanoutExchange deadLetterExchange(){
+            return ExchangeBuilder.fanoutExchange("proposta-pendente.dlq.ex").build();
+        }
+
+        // - Criando Bind DLQ
+        @Bean
+        public Binding criarBinding(){
+            return BindingBuilder.bind(criarFilaPropostaPendenteDLQ()).to(deadLetterExchange());
+        }
+
+
         /*
         Criando configuration para connection factory
 
