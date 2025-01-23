@@ -32,7 +32,9 @@ public class RabbitMQConfiguration {
 
         @Bean
         public Queue criarFilaPropostaPendenteMsAnaliseCredito(){
-            return QueueBuilder.durable("proposta-pendente.ms-analise-credito").build();
+            return QueueBuilder.durable("proposta-pendente.ms-analise-credito")
+                    .deadLetterExchange("proposta-pendente.dlq.ex") //configuração de DLQ
+                    .build();
         }
 
         @Bean
