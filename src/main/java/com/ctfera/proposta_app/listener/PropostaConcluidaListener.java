@@ -25,5 +25,9 @@ public class PropostaConcluidaListener {
         webSocketService.notificar(responseDTO);
     }
 
+    private void atualizarProposta(Proposta proposta){
+        propostaRepository.atualizarProposta(proposta.getId(), proposta.getAprovada(), proposta.getObservacao());
+    }
+
 
 }
