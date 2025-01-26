@@ -17,59 +17,136 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitMQConfiguration {
 
+        //Get values of properties
 
-        //Instanciando Exchange e passado valor de property
-        @Value("${spring.rabbitmq.propostapendente.exchange}")
+            //Exchanges
+        @Value("${spring.rabbitmq.propostapendente.exchange}") //passando valor de property
         private String exchangePropostaPendente;
 
-        @Value("${spring.rabbitmq.propostaconcluida.exchange}")
+        @Value("${spring.rabbitmq.propostaconcluida.exchange}") //passando valor de property
         private String exchangePropostaConcluida;
 
-        //Criação das filas
-        //Filas foram criadas nesse microserviço, mas deveriam ser criadas de acordo com a responsabilidade de cada microserviço.
-        //@Bean é utilizado quando se quer passar a instância de response do método para a gerência do Spring
-        //Obs: @Bean não passa o método, e sim o response dele para o Spring
+        @Value("${spring.rabbitmq.propostapendente-dlq.exchange}")
+        private String exchangePropostaPendenteDLQ;
+
+
+            //Queues
+        @Value("${rabbitmq.queue.proposta-pendente}")
+        private String queuePropostaPendenteToAnaliseCredito;
+
+        @Value("${proposta-pendente.ms-notificacao}")
+        private String queuePropostaPendenteToNotificacao;
+
+        @Value("${proposta-concluida.ms-proposta}")
+        private String queuePropostaConcluida;
+
+        @Value("${proposta-concluida.ms-notificacao}")
+        private String queuePropostaConcluidaToNotificacao;
+
+
+
+        //Create Exchanges
+
+        //"proposta-pendente"
+        //Setando @Bean para entrega do response do método à gerência do Spring.
 
         @Bean
-        public Queue criarFilaPropostaPendenteMsAnaliseCredito(){
-            return QueueBuilder.durable("proposta-pendente.ms-analise-credito")
-                    .deadLetterExchange("proposta-pendente-dlq.ex")
-                    .build();
+        public FanoutExchange criarFanoutExchangePropostaPendente(){
+            return ExchangeBuilder.fanoutExchange(exchangePropostaPendente).build();
         }
+
+        //"proposta-concluida"
 
         @Bean
-        public Queue criarFilaPropostaPendenteMsNotificacao(){
-            return QueueBuilder.durable("proposta-pendente.ms-notificacao").build();
+        public FanoutExchange criarFanoutExchangePropostaConcluida(){
+            return ExchangeBuilder.fanoutExchange(exchangePropostaConcluida).build();
         }
 
-        @Bean
-        public Queue criarFilaPropostaConcluidaMsProposta(){
-            return QueueBuilder.durable("proposta-concluida.ms-proposta").build();
-        }
-
-        @Bean
-        public Queue criarFilaPropostaConcluidaMsNotificacao(){
-            return QueueBuilder.durable("proposta-concluida.ms-notificacao").build();
-        }
-
-        //DLQ Configurations
-        // - Criando DLQ -> Dead Letter Queue (Fila de exceções)
-        @Bean
-        public Queue criarFilaPropostaPendenteDLQ(){
-            return QueueBuilder.durable("proposta-pendente.dlq").build();
-        }
-
-        // - Criando Exchange DLQ
+        //Exchange DLQ
         @Bean
         public FanoutExchange deadLetterExchange(){
             return ExchangeBuilder.fanoutExchange("proposta-pendente-dlq.ex").build();
         }
 
-        // - Criando Bind DLQ
+
+        //Create Queues
+
+        //Filas foram criadas nesse microserviço, mas deveriam ser criadas de acordo com a responsabilidade de cada microserviço.
+        //@Bean é utilizado quando se quer passar a instância de response do método para a gerência do Spring
+        //Obs: @Bean não passa o método, e sim o response dele para o Spring
+
+
+        // - Queue proposta pendente
         @Bean
-        public Binding criarBinding(){
+        public Queue criarFilaPropostaPendenteMsAnaliseCredito(){
+            return QueueBuilder.durable(queuePropostaPendenteToAnaliseCredito)
+                    .deadLetterExchange(exchangePropostaPendenteDLQ) //Direcionando para a DLQ
+                    .build();
+        }
+
+        // - Queue proposta pendente notificação
+        @Bean
+        public Queue criarFilaPropostaPendenteMsNotificacao(){
+            return QueueBuilder.durable(queuePropostaPendenteToNotificacao).build();
+        }
+
+        // - Queue proposta concluída
+        @Bean
+        public Queue criarFilaPropostaConcluidaMsProposta(){
+            return QueueBuilder.durable(queuePropostaConcluida).build();
+        }
+
+        // - Queue proposta concluída notificação
+        @Bean
+        public Queue criarFilaPropostaConcluidaMsNotificacao(){
+            return QueueBuilder.durable(queuePropostaConcluidaToNotificacao).build();
+        }
+
+        // - DLQ -> Dead Letter Queue (Fila de exceções)
+        @Bean
+        public Queue criarFilaPropostaPendenteDLQ(){
+            return QueueBuilder.durable("proposta-pendente.dlq").build();
+        }
+
+
+        //Defining Biding's (Redirecionamentos)
+
+        // - Bind "PropostaPendenteMsAnaliseCredito"
+        @Bean
+        public Binding criarBindingPropostaPendenteMSAnaliseCredito(){
+            return BindingBuilder.bind(criarFilaPropostaPendenteMsAnaliseCredito())
+                    .to(criarFanoutExchangePropostaPendente());
+        }
+
+        // - Bind "PropostaPendenteMsNotificacao"
+        @Bean
+        public Binding criarBindingPropostaPendenteMSNotificacao(){
+            return BindingBuilder.bind(criarFilaPropostaPendenteMsNotificacao())
+                    .to(criarFanoutExchangePropostaPendente());
+        }
+
+        // - Bind "PropostaConcluidaMsPropostaMsProposta"
+        @Bean
+        public Binding criarBindingPropostaConcluidaMSPropostaApp(){
+            return BindingBuilder.bind(criarFilaPropostaConcluidaMsProposta())
+                    .to(criarFanoutExchangePropostaConcluida());
+        }
+
+        // - Bind "PropostaConcluidaMsNotificacao"
+        @Bean
+        public Binding criarBindingPropostaConcluidaMSNotificacao(){
+            return BindingBuilder.bind(criarFilaPropostaConcluidaMsNotificacao())
+                    .to(criarFanoutExchangePropostaConcluida());
+        }
+
+        // - Bind DLQ
+        @Bean
+        public Binding criarBindingPropostaPendenteDLQ(){
             return BindingBuilder.bind(criarFilaPropostaPendenteDLQ()).to(deadLetterExchange());
         }
+
+
+
 
 
         /*
@@ -85,7 +162,6 @@ public class RabbitMQConfiguration {
 
         // -------- Setando instâncias de configuração --------- //
 
-
         // Criando Bean Configuration do RabbitMQAdmin, para criação e gerência das filas por parte do Spring
         @Bean
         public RabbitAdmin criarRabbitAdmin(ConnectionFactory connectionFactory){
@@ -100,61 +176,7 @@ public class RabbitMQConfiguration {
         }
 
 
-        // -------- Setando Exchanges e Bindings --------- //
-
-
-        //Criando a Exchange "proposta-pendente"
-        //Setando @Bean para entrega do response do método à gerência do Spring.
-
-        @Bean
-        public FanoutExchange criarFanoutExchangePropostaPendente(){
-            return ExchangeBuilder.fanoutExchange(exchangePropostaPendente).build();
-        }
-
-        //Criando a Exchange "proposta-concluida"
-        //Setando @Bean para entrega do response do método à gerência do Spring.
-
-        @Bean
-        public FanoutExchange criarFanoutExchangePropostaConcluida(){
-            return ExchangeBuilder.fanoutExchange(exchangePropostaConcluida).build();
-        }
-
-
-        //Setando o binds da Exchange "proposta-pendente"
-        //Método seta Queues da Exchange específica
-        //"PropostaPendenteMsAnaliseCredito"
-        @Bean
-        public Binding criarBindingPropostaPendenteMSAnaliseCredito(){
-            return BindingBuilder.bind(criarFilaPropostaPendenteMsAnaliseCredito())
-                                        .to(criarFanoutExchangePropostaPendente());
-        }
-
-        //"PropostaPendenteMsNotificacao"
-        @Bean
-        public Binding criarBindingPropostaPendenteMSNotificacao(){
-            return BindingBuilder.bind(criarFilaPropostaPendenteMsNotificacao())
-                    .to(criarFanoutExchangePropostaPendente());
-        }
-
-
-        //Setando o binds da Exchange "proposta-concluida"
-        //Método seta Queues da Exchange específica
-        //"PropostaConcluidaMsPropostaMsProposta"
-        @Bean
-        public Binding criarBindingPropostaConcluidaMSPropostaApp(){
-            return BindingBuilder.bind(criarFilaPropostaConcluidaMsProposta())
-                    .to(criarFanoutExchangePropostaConcluida());
-        }
-
-        //"PropostaConcluidaMsNotificacao"
-        @Bean
-        public Binding criarBindingPropostaConcluidaMSNotificacao(){
-            return BindingBuilder.bind(criarFilaPropostaConcluidaMsNotificacao())
-                    .to(criarFanoutExchangePropostaConcluida());
-        }
-
-
-
+        // -------- Defining Message Converter --------- //
 
         //Criado um Bean MessageConverter com o Jackson para converter Message do Rabbit em JSON e usar no @Bean de RabbitTemplate criado
         @Bean
