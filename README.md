@@ -87,3 +87,13 @@ networks:
 #### Levantando env com docker compose:
 
 ``docker-compose -f rabbitMQ_env.yml -p rabbit_mq_env up -d``
+
+#### Como adicionar plugin para  mover mensagens das filas RabbitMQ:
+
+### Acessando Container Rabbit MQ:
+``docker exec -it rabbitmq /bin/bash``
+
+### Executando o comando de instalar plugin:
+```rabbitmq-plugins enable rabbitmq_shovel rabbitmq_shovel_management```
+
+![img_1.png](img_1.png)

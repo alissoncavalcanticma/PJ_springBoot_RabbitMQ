@@ -84,6 +84,7 @@ public class RabbitMQConfiguration {
         public Queue criarFilaPropostaPendenteMsAnaliseCredito(){
             return QueueBuilder.durable(queuePropostaPendenteToAnaliseCredito)
                     .maxLength(2L)
+                    .maxPriority(10) //Definir indicador de priorização da mensagem (1-10)
                     //.ttl(10000) -> Tempo de duração pra ser consumida (Após isso vai para DLQ)
                     .deadLetterExchange(exchangePropostaPendenteDLQ) //Direcionando para a DLQ
                     .build();
