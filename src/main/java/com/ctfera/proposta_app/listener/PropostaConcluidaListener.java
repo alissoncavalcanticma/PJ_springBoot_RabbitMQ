@@ -18,7 +18,7 @@ public class PropostaConcluidaListener {
     @Autowired
     private WebSocketService webSocketService;
 
-    @RabbitListener(queues = "${rabbitmq.queue.proposta.concluida}")
+    @RabbitListener(queues = "${spring.rabbitmq.queue.proposta-concluida}")
     public void propostaConcluida(Proposta proposta){
         propostaRepository.save(proposta);
         PropostaResponseDTO responseDTO = PropostaMapper.INSTANCE.convertEntityToDto(proposta);
