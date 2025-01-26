@@ -31,17 +31,20 @@ public class RabbitMQConfiguration {
 
 
             //Queues
-        @Value("${rabbitmq.queue.proposta-pendente}")
+        @Value("${spring.rabbitmq.queue.proposta-pendente}")
         private String queuePropostaPendenteToAnaliseCredito;
 
-        @Value("${proposta-pendente.ms-notificacao}")
+        @Value("${spring.rabbitmq.queue.proposta-pendente-notificacao}")
         private String queuePropostaPendenteToNotificacao;
 
-        @Value("${proposta-concluida.ms-proposta}")
+        @Value("${spring.rabbitmq.queue.proposta-concluida}")
         private String queuePropostaConcluida;
 
-        @Value("${proposta-concluida.ms-notificacao}")
+        @Value("${spring.rabbitmq.queue.proposta-concluida-notificacao}")
         private String queuePropostaConcluidaToNotificacao;
+
+        @Value("${spring.rabbitmq.queue.proposta-pendente-dlq}")
+        private String queuePropostaPendenteDLQ;
 
 
 
@@ -65,7 +68,7 @@ public class RabbitMQConfiguration {
         //Exchange DLQ
         @Bean
         public FanoutExchange deadLetterExchange(){
-            return ExchangeBuilder.fanoutExchange("proposta-pendente-dlq.ex").build();
+            return ExchangeBuilder.fanoutExchange(exchangePropostaPendenteDLQ).build();
         }
 
 
@@ -105,7 +108,7 @@ public class RabbitMQConfiguration {
         // - DLQ -> Dead Letter Queue (Fila de exceções)
         @Bean
         public Queue criarFilaPropostaPendenteDLQ(){
-            return QueueBuilder.durable("proposta-pendente.dlq").build();
+            return QueueBuilder.durable(queuePropostaPendenteDLQ).build();
         }
 
 
