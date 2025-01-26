@@ -5,6 +5,7 @@ import com.ctfera.proposta_app.dto.PropostaResponseDTO;
 import com.ctfera.proposta_app.entity.Proposta;
 import com.ctfera.proposta_app.mapper.PropostaMapper;
 import com.ctfera.proposta_app.repository.PropostaRepository;
+import org.springframework.amqp.core.MessagePostProcessor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -35,21 +36,28 @@ public class PropostaService {
         Proposta proposta =  PropostaMapper.INSTANCE.convertDtoToProposta(requestDTO);
         propostaRepository.save(proposta);
 
+        //Definindo a prioridade de leitura da proposta na fila rabbit
+        int prioridade = proposta.getUsuario().getRenda() > 10000 ? 10 : 5;
+
+        MessagePostProcessor messagePostProcessor = message -> {
+            message.getMessageProperties().setPriority(prioridade);
+            return message;
+        };
+
         // PropostaResponseDTO response = PropostaMapper.INSTANCE.convertEntityToDto(proposta);
         // notificacaoService.notificar(response, exchange);
 
-        notificarRabbitMQ(proposta);
+        notificarRabbitMQ(proposta, messagePostProcessor);
 
         return PropostaMapper.INSTANCE.convertEntityToDto(proposta);
     }
 
     //Método de notificação com tratamento para casos de falha, onde salva false para integração concluída
-    private void notificarRabbitMQ(Proposta proposta){
+    private void notificarRabbitMQ(Proposta proposta, MessagePostProcessor messagePostProcessor){
        try{
-            notificacaoRabbitService.notificar(proposta, exchange);
+            notificacaoRabbitService.notificar(proposta, exchange, messagePostProcessor);
        }catch(RuntimeException ex){
-           proposta.setIntegrada(false);
-           propostaRepository.save(proposta);
+           propostaRepository.atualizarProposta(proposta.getId(), false, "");
        }
     }
 
