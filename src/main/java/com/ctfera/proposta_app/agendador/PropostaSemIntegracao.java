@@ -33,7 +33,7 @@ public class PropostaSemIntegracao {
 
     //Annotation para Bean de agendamento com parâmetros de frequência de execução
     //Annotation @EnableScheduling deve ser acrescentado ao método main
-    @Scheduled(fixedDelay = 10, timeUnit = TimeUnit.SECONDS)
+    @Scheduled(fixedDelay = 1, timeUnit = TimeUnit.MINUTES)
     public void buscarPropostasSemIntegracao(){
         logger.info("0 - Verificação de proposta sem integração..."); //Gerar Log de início de execução.
         propostaRepository.findAllByIntegradaIsFalse().forEach(proposta -> {
