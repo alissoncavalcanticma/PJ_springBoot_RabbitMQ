@@ -25,7 +25,11 @@ public class PropostaSemIntegracao {
     //Utilizando lib  org.slf4j
     public final Logger logger = LoggerFactory.getLogger(PropostaSemIntegracao.class);
 
-    public PropostaSemIntegracao(PropostaRepository propostaRepository, NotificacaoRabbitService notificacaoRabbitService,@Value("${spring.rabbitmq.propostapendente.exchange}") String exchange) {
+    public PropostaSemIntegracao(
+            PropostaRepository propostaRepository,
+            NotificacaoRabbitService notificacaoRabbitService,
+            @Value("${spring.rabbitmq.propostapendente.exchange}") String exchange
+    ){
         this.propostaRepository = propostaRepository;
         this.notificacaoRabbitService = notificacaoRabbitService;
         this.exchange = exchange;
