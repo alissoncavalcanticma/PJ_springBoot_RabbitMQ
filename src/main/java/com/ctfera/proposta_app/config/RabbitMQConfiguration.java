@@ -83,6 +83,7 @@ public class RabbitMQConfiguration {
         @Bean
         public Queue criarFilaPropostaPendenteMsAnaliseCredito(){
             return QueueBuilder.durable(queuePropostaPendenteToAnaliseCredito)
+                    .maxLength(2L)
                     .deadLetterExchange(exchangePropostaPendenteDLQ) //Direcionando para a DLQ
                     .build();
         }
